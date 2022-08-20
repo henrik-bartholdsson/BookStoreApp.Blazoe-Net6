@@ -24,7 +24,7 @@ namespace BookStoreApp.Api.Controllers
             _mapper = mapper;
         }
 
-        // GET: api/Authors
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AuthorReadOnlyDto>>> GetAuthors()
         {
@@ -39,7 +39,7 @@ namespace BookStoreApp.Api.Controllers
             return Ok(authorsDto);
         }
 
-        // GET: api/Authors/5
+
         [HttpGet("{id}")]
         public async Task<ActionResult<AuthorReadOnlyDto>> GetAuthor(int id)
         {
@@ -59,8 +59,7 @@ namespace BookStoreApp.Api.Controllers
             return authorDto;
         }
 
-        // PUT: api/Authors/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+
         [HttpPut("{id}")]
         public async Task<IActionResult> PutAuthor(int id, AuthorUpdateDto authorUpdateDto)
         {
@@ -97,8 +96,7 @@ namespace BookStoreApp.Api.Controllers
             return NoContent();
         }
 
-        // POST: api/Authors
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+
         [HttpPost]
         public async Task<ActionResult<AuthorCreateDto>> PostAuthor(AuthorCreateDto authorDto)
         {
@@ -114,7 +112,7 @@ namespace BookStoreApp.Api.Controllers
             return CreatedAtAction(nameof(GetAuthor), new { id = author.Id }, author);
         }
 
-        // DELETE: api/Authors/5
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAuthor(int id)
         {
