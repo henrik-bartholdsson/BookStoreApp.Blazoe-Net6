@@ -9,11 +9,13 @@ using BookStoreApp.Api.Data;
 using BookStoreApp.Api.Models.Book;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BookStoreApp.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class BooksController : ControllerBase
     {
         private readonly BookStoreDbContext _context;
@@ -55,6 +57,7 @@ namespace BookStoreApp.Api.Controllers
 
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> PutBook(int id, BookUpdateDto bookUpdateDto)
         {
             if (id != bookUpdateDto.Id)
@@ -91,6 +94,7 @@ namespace BookStoreApp.Api.Controllers
 
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<BookCreateDto>> PostBook(BookCreateDto bookDto)
         {
           if (_context.Books == null)
@@ -107,6 +111,7 @@ namespace BookStoreApp.Api.Controllers
 
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteBook(int id)
         {
             if (_context.Books == null)

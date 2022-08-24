@@ -8,11 +8,13 @@ using Microsoft.EntityFrameworkCore;
 using BookStoreApp.Api.Data;
 using BookStoreApp.Api.Models.Author;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BookStoreApp.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class AuthorsController : ControllerBase
     {
         private readonly BookStoreDbContext _context;
@@ -61,6 +63,7 @@ namespace BookStoreApp.Api.Controllers
 
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> PutAuthor(int id, AuthorUpdateDto authorUpdateDto)
         {
 
@@ -98,6 +101,7 @@ namespace BookStoreApp.Api.Controllers
 
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<AuthorCreateDto>> PostAuthor(AuthorCreateDto authorDto)
         {
             var author = _mapper.Map<Author>(authorDto);
@@ -114,6 +118,7 @@ namespace BookStoreApp.Api.Controllers
 
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteAuthor(int id)
         {
             if (_context.Authors == null)
