@@ -24,7 +24,6 @@ builder.Services.AddIdentityCore<ApiUser>()
 builder.Services.AddAutoMapper(typeof(MapperConfig));
 
 
-builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -60,6 +59,8 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Key"]))
     };
 });
+
+builder.Services.AddControllers();
 
 var app = builder.Build();
 
