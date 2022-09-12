@@ -1,6 +1,7 @@
 ﻿@page "/authors/update/{id:int}"
 @inject IAuthorService authorService
 @inject NavigationManager navManager
+@attribute [Authorize(Roles = Roles.Admin)]
 <h3>Edit Author</h3>
 
 <EditForm Model="Author" OnValidSubmit="HandleUpdateAuthor">
@@ -43,7 +44,7 @@
 
     protected async override Task OnInitializedAsync()
     {
-        var response = await authorService.GetAuthorForUpdate(Id);
+        var response = await authorService.GetForUpdate(Id);
         if(response.Success)
         {
             Author = response.Data;
@@ -52,7 +53,7 @@
 
     private async Task HandleUpdateAuthor()
     {
-        var response = await authorService.EditAuthor(Id, Author);
+        var response = await authorService.Edit(Id, Author);
 
         if (response.Success)
         {

@@ -1,6 +1,7 @@
 ﻿@page "/authors/create/"
 @inject IAuthorService authorService
 @inject NavigationManager navManager
+@attribute [Authorize(Roles = Roles.Admin)]
 <h3>Create New Author</h3>
 
 <EditForm Model="Author" OnValidSubmit="HandleCreateAuthor">
@@ -40,7 +41,7 @@
 
     private async Task HandleCreateAuthor()
     {
-        var response = await authorService.CreateAuthor(Author);
+        var response = await authorService.Create(Author);
 
         if(response.Success)
         {

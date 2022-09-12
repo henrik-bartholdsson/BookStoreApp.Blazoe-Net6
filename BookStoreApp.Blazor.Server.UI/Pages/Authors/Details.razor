@@ -68,7 +68,7 @@
 
     protected async override Task OnInitializedAsync()
     {
-        var response = await authorService.GetAuthor(Id);
+        var response = await authorService.Get(Id);
         if (response.Success)
         {
             Author = response.Data;

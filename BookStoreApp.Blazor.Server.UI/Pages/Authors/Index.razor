@@ -1,5 +1,6 @@
 ﻿@page "/authors/"
 @inject IAuthorService authorService
+@inject IJSRuntime js;
 <h3>Index</h3>
 
 
@@ -18,7 +19,9 @@
 }
 else
 {
-    <a class="btn btn-primary" href="/authors/create"><span class="oi oi-plus" aria-hidden="true"></span>Create</a>
+    <AuthorizeView Roles="Admin">
+        <a class="btn btn-primary" href="/authors/create"><span class="oi oi-plus" aria-hidden="true"></span>Create</a>
+    </AuthorizeView>
     <br />
     <table class="table table-responsive">
         <thead>
@@ -36,8 +39,10 @@ else
                     <td>@author.LastName</td>
                     <td>
                         <a class="btn btn-primary" href="/authors/details/@author.Id"><span class="oi oi-book"></span>Details</a>
+                        <AuthorizeView Roles="Admin">
                         <a class="btn btn-warning" href="/authors/update/@author.Id"><span class="oi oi-pencil"></span>Edit</a>
-                        <a class="btn btn-danger" href="/authors/create"><span class="oi oi-delete"></span>Delete</a>
+                        <button @onclick=@(() => Delete(author.Id)) class="btn btn-danger" href="/authors/create"><span class="oi oi-delete"></span>Delete</button>
+                        </AuthorizeView>
                     </td>
                 </tr>
             }
@@ -46,15 +51,34 @@ else
 }
 
 @code {
-    private List<AuthorReadOnlyDto> Authors;
+    private List<AuthorReadOnlyDto> Authors = new();
     private Response<List<AuthorReadOnlyDto>> response = new Response<List<AuthorReadOnlyDto>>{ Success = true};
 
     protected override async Task OnInitializedAsync()
     {
-        response = await authorService.GetAuthors();
+        response = await authorService.Get();
         if (response.Success)
         {
             Authors = response.Data;
         }
+    }
+
+    private async Task Delete(int authorId)
+    {
+        var author = Authors.First(a => a.Id == authorId);
+        var confirm = await js.InvokeAsync<bool>("confirm", $"Are You Sure You wont to delete {author.FirstName} {author.LastName}?");
+        
+        if (confirm)
+        {
+            var response = await authorService.Delete(authorId);
+
+            if (response.Success)
+            {
+                await OnInitializedAsync();
+            }
+        }
+
+        
+
     }
 }
