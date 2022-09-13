@@ -23,7 +23,7 @@ namespace BookStoreApp.Blazor.Server.UI.Providers
 
             if(savedToken == null)
             {
-                return new AuthenticationState(user);
+                return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
             }
 
             var tokenContent = jwtSecurityTokenHandler.ReadJwtToken(savedToken);
