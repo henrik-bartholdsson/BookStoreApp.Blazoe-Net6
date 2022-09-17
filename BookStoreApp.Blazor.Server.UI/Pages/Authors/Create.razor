@@ -7,19 +7,19 @@
 <EditForm Model="Author" OnValidSubmit="HandleCreateAuthor">
     <DataAnnotationsValidator />
     <ValidationSummary />
-    <div class="form-goup">
+    <div class="form-group">
         <label for="firstname">First Name</label>
         <InputText @bind-Value="Author.FirstName" class="form-control" id="firstname" />
         <ValidationMessage For="@(() => Author.FirstName)" />
     </div>
     <br />
-    <div class="form-goup">
+    <div class="form-group">
         <label for="lastname">First Name</label>
         <InputText @bind-Value="Author.LastName" class="form-control" id="lastname" />
         <ValidationMessage For="@(() => Author.LastName)" />
     </div>
     <br />
-    <div class="form-goup">
+    <div class="form-group">
         <label for="bio">Biography</label>
         <InputText @bind-Value="Author.Bio" class="form-control" id="bio" />
         <ValidationMessage For="@(() => Author.Bio)" />

@@ -6,36 +6,37 @@
 
 <h3>Create Book</h3>
 
-<EditForm Model="Book" OnValidSubmit="HandleBookCreate">
+
+<EditForm Model="Book" OnValidSubmit="HandleCreate">
     <DataAnnotationsValidator />
     <ValidationSummary />
-    <div class="form-goup">
+    <div class="form-group">
         <label for="title">Book Title</label>
         <InputText @bind-Value="Book.Title" class="form-control" id="title" />
     </div>
     <br />
-    <div class="form-goup">
+    <div class="form-group">
         <label for="isbn">ISBN</label>
         <InputText @bind-Value="Book.Isbn" class="form-control" id="isbn" />
     </div>
     <br />
-    <div class="form-goup">
+    <div class="form-group">
         <label for="price">Price</label>
         <InputNumber @bind-Value="Book.Price" class="form-control" id="price" />
     </div>
     <br />
-    <div class="form-goup">
+    <div class="form-group">
         <label for="year">Year</label>
         <InputNumber @bind-Value="Book.Year" class="form-control" id="year" />
     </div>
     <br />
-    <div class="form-goup">
+    <div class="form-group">
         <label for="summary">Summary</label>
         <InputTextArea @bind-Value="Book.Summary" class="form-control" id="summary" />
     </div>
     <br />
-    <div class="form-goup">
-        <label for="author">Author</label>
+    <div class="form-group">
+        <label for="author">Authors</label>
         <InputSelect @bind-Value="Book.AuthorId" class="form-select" id="author">
             <option value="">-- Select Author --</option>
             @foreach(var author in Authors)
@@ -45,11 +46,11 @@
         </InputSelect>
     </div>
     <br />
-    <div class="form-goup">
-        <label>Book Cover Photo</label>
+    <div class="form-group">
+        <label for="bookcover">Book Cover Photo</label>
         <div>
-            <InputFile OnChange="HandleFileSelection" />
-            <img src="@img" width="100" height="100" class="img-thumbnail" />
+        <InputFile OnChange="HandleFileSelection" id="bookcover" />
+            <img src="@img" width="100" height="100" class="img-thumbnail" alt="Book cover image" />
             <p class="text-danger">@UploadFileWarning</p>
         </div>
     </div>
@@ -82,7 +83,7 @@
         }
     }
 
-    private async Task HandleBookCreate()
+    private async Task HandleCreate()
     {
         var response = await bookService.Create(Book);
         if (response.Success)
