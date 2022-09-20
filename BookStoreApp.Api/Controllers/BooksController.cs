@@ -56,9 +56,9 @@ namespace BookStoreApp.Api.Controllers
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> PutBook(int id, BookUpdateDto bookUpdateDto)
+        public async Task<IActionResult> PutBook(int id, BookUpdateDto bookDto)
         {
-            if (id != bookUpdateDto.Id)
+            if (id != bookDto.Id)
             {
                 return BadRequest();
             }
@@ -68,7 +68,23 @@ namespace BookStoreApp.Api.Controllers
             if (book == null)
                 return NotFound();
 
-            _mapper.Map(bookUpdateDto, book);
+            if (String.IsNullOrEmpty(bookDto.ImageData) == false)
+            {
+                bookDto.Image = CreateFile(bookDto.ImageData, bookDto.OriginalImageName);
+
+                var picName = Path.GetFileName(book.Image);
+                var path = $"{_webHostEnvironment.WebRootPath}\\bookcoverimages\\{picName}";
+
+
+                if(System.IO.File.Exists(path))
+                {
+                    System.IO.File.Delete(path);
+                }
+            }
+
+            _mapper.Map(bookDto, book);
+
+
             _context.Entry(book).State = EntityState.Modified;
 
             try
@@ -114,7 +130,7 @@ namespace BookStoreApp.Api.Controllers
         {
             var url = HttpContext.Request.Host.Value;
             var ext = Path.GetExtension(imageName);
-            var fileName = $"{Guid.NewGuid().ToString()}.{ext}";
+            var fileName = $"{Guid.NewGuid().ToString()}{ext}";
 
             var path = $"{_webHostEnvironment.WebRootPath}\\bookcoverimages\\{fileName}";
             

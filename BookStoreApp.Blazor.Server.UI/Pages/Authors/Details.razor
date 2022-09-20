@@ -25,7 +25,7 @@
         <br />
     </fieldset>
 
-    @if(Author.Books == null || Author.Books.Any() == false)
+    @if (Author.Books == null || Author.Books.Any() == false)
     {
         <div class="alert alert-dismissible alert-secondary">
             No books on this Author
@@ -33,17 +33,21 @@
     }
     else
     {
-        foreach(var b in Author.Books)
-        {
-            <div class="card" style="width: 18rem">
-                <img src="@b.Image" class="card-img-top" alt="@b.Title">
-                <div class="card-body">
-                    <h5 class="card-title">@b.Title - @b.Price</h5>
-                    <p class="card-text">@b.Price</p>
-                    <a href="" class="btn btn-primary">View Book</a>
+        <div class="row">
+            @foreach(var b in Author.Books)
+            {
+                <div class="col-3">
+                    <div class="card" style="width: 18rem">
+                        <img src="@b.Image" class="card-img-top" alt="@b.Title" style="width:286px; height:164px">
+                        <div class="card-body">
+                            <h5 class="card-title">@b.Title - @b.Price</h5>
+                            <p class="card-text">@b.Price</p>
+                            <a href="/books/details/@b.Id" class="btn btn-primary">View Book</a>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        }
+            }
+        </div>
     }
 
     <button @onclick="GotoEdit" class="btn btn-warning">
@@ -58,13 +62,13 @@
     private AuthorDetailsDto Author = new AuthorDetailsDto();
     public void HandleCreateAuthor()
     {
-        
+
     }
 
     [Parameter]
     public int Id { get; set; }
 
-    
+
 
     protected async override Task OnInitializedAsync()
     {

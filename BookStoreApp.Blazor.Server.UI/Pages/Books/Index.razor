@@ -42,7 +42,7 @@ else
                     </td>
                     <td>@book.Title</td>
                     <td>@book.Price.ToString()</td>
-                    <td>@book.AuthorName</td>
+                    <td><a class="btn btn-link" href="/authors/details/@book.AuthorId">@book.AuthorName</a></td>
                     <td>@book.Title</td>
                     <td>
                         <a class="btn btn-primary" href="/books/details/@book.Id"><span class="oi oi-book"></span>Details</a>
