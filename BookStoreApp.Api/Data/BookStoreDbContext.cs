@@ -87,7 +87,7 @@ namespace BookStoreApp.Api.Data
                 entity.HasIndex(e => e.Isbn, "UQ__Books__447D36EA01365C02")
                     .IsUnique();
 
-                entity.Property(e => e.Image).HasMaxLength(50);
+                entity.Property(e => e.Image).HasMaxLength(250);
 
                 entity.Property(e => e.Isbn)
                     .HasMaxLength(50)
