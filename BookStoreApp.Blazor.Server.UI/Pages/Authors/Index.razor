@@ -23,62 +23,28 @@ else
         <a class="btn btn-primary" href="/authors/create"><span class="oi oi-plus" aria-hidden="true"></span>Create</a>
     </AuthorizeView>
     <br />
-    <table class="table table-responsive">
-        <thead>
-            <tr>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var author in Authors)
-            {
-                <tr>
-                    <td>@author.FirstName</td>
-                    <td>@author.LastName</td>
-                    <td>
-                        <a class="btn btn-primary" href="/authors/details/@author.Id"><span class="oi oi-book"></span>Details</a>
-                        <AuthorizeView Roles="Admin">
-                        <a class="btn btn-warning" href="/authors/update/@author.Id"><span class="oi oi-pencil"></span>Edit</a>
-                        <button @onclick=@(() => Delete(author.Id)) class="btn btn-danger" href="/authors/create"><span class="oi oi-delete"></span>Delete</button>
-                        </AuthorizeView>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <AuthorTable Authors="Authors" TotalSize="TotalSize" OnScroll="LoadAuthors" />
 }
 
 @code {
-    private List<AuthorReadOnlyDto> Authors = new();
-    private Response<List<AuthorReadOnlyDto>> response = new Response<List<AuthorReadOnlyDto>>{ Success = true};
+    public List<AuthorReadOnlyDto> Authors;
+    public int TotalSize { get; set; }
+    private Response<AuthorReadOnlyDtoVirtualizeResponse> response = new Response<AuthorReadOnlyDtoVirtualizeResponse> { Success = true };
 
     protected override async Task OnInitializedAsync()
     {
-        response = await authorService.Get();
+        response = await authorService.Get(new QueryParameters { StartIndex = 0 });
         if (response.Success)
         {
-            Authors = response.Data;
+            Authors = response.Data.Items.ToList();
         }
     }
 
-    private async Task Delete(int authorId)
+
+    private async Task LoadAuthors(QueryParameters queryParams)
     {
-        var author = Authors.First(a => a.Id == authorId);
-        var confirm = await js.InvokeAsync<bool>("confirm", $"Are You Sure You wont to delete {author.FirstName} {author.LastName}?");
-        
-        if (confirm)
-        {
-            var response = await authorService.Delete(authorId);
-
-            if (response.Success)
-            {
-                await OnInitializedAsync();
-            }
-        }
-
-        
-
+        var virtualizeResult = await authorService.Get(queryParams);
+        Authors = virtualizeResult.Data.Items.ToList();
+        TotalSize = virtualizeResult.Data.TotalSize;
     }
 }

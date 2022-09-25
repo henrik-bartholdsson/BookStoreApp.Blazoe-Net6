@@ -6,6 +6,7 @@ using BookStoreApp.Api.Models.Book;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Authorization;
+using BookStoreApp.Api.Repositories;
 
 namespace BookStoreApp.Api.Controllers
 {
@@ -14,13 +15,13 @@ namespace BookStoreApp.Api.Controllers
     [Authorize]
     public class BooksController : ControllerBase
     {
-        private readonly BookStoreDbContext _context;
+        private readonly IBooksRepository booksRepository;
         private readonly IMapper _mapper;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public BooksController(BookStoreDbContext context, IMapper mapper, IWebHostEnvironment webHostEnvironment)
+        public BooksController(IBooksRepository context, IMapper mapper, IWebHostEnvironment webHostEnvironment)
         {
-            _context = context;
+            booksRepository = context;
             _mapper = mapper;
             this._webHostEnvironment = webHostEnvironment;
         }
@@ -28,10 +29,7 @@ namespace BookStoreApp.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<BookReadOnlyDto>>> GetBooks()
         {
-            var booksDto = await _context.Books
-                .Include(x => x.Author)
-                  .ProjectTo<BookReadOnlyDto>(_mapper.ConfigurationProvider)
-                  .ToListAsync();
+            var booksDto = await booksRepository.GetAllBooksAsync();
 
             return Ok(booksDto);
         }
@@ -40,10 +38,7 @@ namespace BookStoreApp.Api.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<BookDetailsDto>> GetBook(int id)
         {
-            var bookDetailsDto = await _context.Books
-                .Include(q => q.Author)
-                .ProjectTo<BookDetailsDto>(_mapper.ConfigurationProvider)
-                .FirstOrDefaultAsync(q => q.Id == id);
+            var bookDetailsDto = await booksRepository.GetBookAsync(id);
 
             if (bookDetailsDto == null)
             {
@@ -63,7 +58,7 @@ namespace BookStoreApp.Api.Controllers
                 return BadRequest();
             }
 
-            var book = _context.Books.Find(id);
+            var book = await booksRepository.GetAsync(id);
 
             if (book == null)
                 return NotFound();
@@ -85,11 +80,9 @@ namespace BookStoreApp.Api.Controllers
             _mapper.Map(bookDto, book);
 
 
-            _context.Entry(book).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await booksRepository.UpdateAsync(book);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -111,19 +104,37 @@ namespace BookStoreApp.Api.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<BookCreateDto>> PostBook(BookCreateDto bookDto)
         {
-            
-
             var book = _mapper.Map<Book>(bookDto);
-
             if(String.IsNullOrEmpty(bookDto.ImageData) == false || String.IsNullOrEmpty(bookDto.OriginalImageName) == false)
             {
                 book.Image = CreateFile(bookDto.ImageData, bookDto.OriginalImageName);
             }
             
-            _context.Books.Add(book);
-            await _context.SaveChangesAsync();
+            await booksRepository.AddAsync(book);
 
             return CreatedAtAction(nameof(GetBook), new { id = book.Id }, book);
+        }
+
+
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> DeleteBook(int id)
+        {
+            var book = await booksRepository.GetAsync(id);
+
+            if (book == null)
+            {
+                return NotFound();
+            }
+
+            await booksRepository.DeleteAsync(id);
+
+            return NoContent();
+        }
+
+        private async Task<bool> BookExistsAsync(int id)
+        {
+            return await booksRepository.Exists(id);
         }
 
         private string CreateFile(string imageBase64, string imageName)
@@ -133,41 +144,15 @@ namespace BookStoreApp.Api.Controllers
             var fileName = $"{Guid.NewGuid().ToString()}{ext}";
 
             var path = $"{_webHostEnvironment.WebRootPath}\\bookcoverimages\\{fileName}";
-            
+
             byte[] image = Convert.FromBase64String(imageBase64);
 
             var fileStream = System.IO.File.Create(path);
             fileStream.Write(image, 0, image.Length);
             fileStream.Close();
-            
-            
+
+
             return $"https://{url}/bookcoverimages/{fileName}";
-        }
-
-
-        [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> DeleteBook(int id)
-        {
-            if (_context.Books == null)
-            {
-                return NotFound();
-            }
-            var book = await _context.Books.FindAsync(id);
-            if (book == null)
-            {
-                return NotFound();
-            }
-
-            _context.Books.Remove(book);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private async Task<bool> BookExistsAsync(int id)
-        {
-            return await _context.Books.AnyAsync(b => b.Id == id);
         }
     }
 }

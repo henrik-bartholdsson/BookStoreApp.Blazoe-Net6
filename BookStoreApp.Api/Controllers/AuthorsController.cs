@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BookStoreApp.Api.Data;
 using BookStoreApp.Api.Models.Author;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using AutoMapper.QueryableExtensions;
+using BookStoreApp.Api.Repositories;
+using BookStoreApp.Api.Models;
 
 namespace BookStoreApp.Api.Controllers
 {
@@ -18,28 +14,44 @@ namespace BookStoreApp.Api.Controllers
     [Authorize]
     public class AuthorsController : ControllerBase
     {
-        private readonly BookStoreDbContext _context;
+        private readonly IAuthorRepository authorRepository;
         private readonly IMapper _mapper;
 
-        public AuthorsController(BookStoreDbContext context, IMapper mapper)
+        public AuthorsController(IAuthorRepository authorRepository, IMapper mapper)
         {
-            _context = context;
+            this.authorRepository = authorRepository;
             _mapper = mapper;
         }
 
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<AuthorReadOnlyDto>>> GetAuthors()
+        public async Task<ActionResult<VirtualizeResponse<AuthorReadOnlyDto>>> GetAuthors([FromQuery] QueryParameters queryParameters)
         {
-          if (_context.Authors == null)
-          {
-              return NotFound();
-          }
+            try
+            {
+                return await authorRepository.GetAllAsync<AuthorReadOnlyDto>(queryParameters);
+            }
+            catch (Exception ex)
+            {
 
-            var authors = await _context.Authors.ToListAsync();
-            var authorsDto = _mapper.Map<IEnumerable<AuthorReadOnlyDto>>(authors);
+                return StatusCode(500, "Server error...");
+            }
+        }
 
-            return Ok(authorsDto);
+        [HttpGet("GetAll")]
+        public async Task<ActionResult<List<AuthorReadOnlyDto>>> GetAuthors()
+        {
+            try
+            {
+                var authors = await authorRepository.GetAllAsync();
+                var authorDtos = _mapper.Map<IEnumerable<AuthorReadOnlyDto>>(authors);
+                return Ok(authors);
+            }
+            catch (Exception ex)
+            {
+
+                return StatusCode(500, "Server error...");
+            }
         }
 
 
@@ -48,10 +60,7 @@ namespace BookStoreApp.Api.Controllers
         {
             try
             {
-                var author = await _context.Authors
-                    .Include(q => q.Books)
-                    .ProjectTo<AuthorDetailsDto>(_mapper.ConfigurationProvider)
-                    .FirstOrDefaultAsync(q => q.Id == id);
+                var author = await authorRepository.GetAuthorDetailsAsync(id);
 
                 if (author == null)
                 {
@@ -80,21 +89,20 @@ namespace BookStoreApp.Api.Controllers
                 return BadRequest();
             }
 
-            var author = await _context.Authors.FindAsync(id);
+            var author = await authorRepository.GetAsync(id);
 
             if (author == null)
                 return NotFound();
 
             _mapper.Map(authorUpdateDto, author);
-            _context.Entry(author).State = EntityState.Modified;
 
             try
             {
-                await _context.SaveChangesAsync();
+                await authorRepository.UpdateAsync(author);
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!AuthorExists(id))
+                if (!await AuthorExists(id))
                 {
                     return NotFound();
                 }
@@ -112,16 +120,18 @@ namespace BookStoreApp.Api.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<AuthorCreateDto>> PostAuthor(AuthorCreateDto authorDto)
         {
-            var author = _mapper.Map<Author>(authorDto);
+            try
+            {
+                var author = _mapper.Map<Author>(authorDto);
+                await authorRepository.AddAsync(author);
 
-          if (_context.Authors == null)
-          {
-              return Problem("Entity set 'BookStoreDbContext.Authors'  is null.");
-          }
-            _context.Authors.Add(author);
-            await _context.SaveChangesAsync();
+                return CreatedAtAction(nameof(GetAuthor), new { id = author.Id }, author);
+            }
+            catch (Exception)
+            {
 
-            return CreatedAtAction(nameof(GetAuthor), new { id = author.Id }, author);
+                return StatusCode(500);
+            }
         }
 
 
@@ -129,25 +139,27 @@ namespace BookStoreApp.Api.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteAuthor(int id)
         {
-            if (_context.Authors == null)
+            try
             {
-                return NotFound();
+                var author = await authorRepository.GetAsync(id);
+                if (author == null)
+                {
+                    return NotFound();
+                }
+
+                await authorRepository.DeleteAsync(author.Id);
+                return NoContent();
             }
-            var author = await _context.Authors.FindAsync(id);
-            if (author == null)
+            catch (Exception)
             {
-                return NotFound();
+
+                return StatusCode(500, "Server error.");
             }
-
-            _context.Authors.Remove(author);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
         }
 
-        private bool AuthorExists(int id)
+        private async Task<bool> AuthorExists(int id)
         {
-            return (_context.Authors?.Any(e => e.Id == id)).GetValueOrDefault();
+            return await authorRepository.Exists(id);
         }
     }
 }

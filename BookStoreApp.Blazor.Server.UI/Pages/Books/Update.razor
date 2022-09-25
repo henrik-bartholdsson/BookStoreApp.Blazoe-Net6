@@ -94,11 +94,11 @@
             img = Book.Image;
         }
 
-        var authorResponse = await bookService.GetForUpdate(Id);
+        var authorResponse = await authorService.Get();
 
         if (authorResponse.Success)
         {
-            Book = authorResponse.Data;
+            Authors = authorResponse.Data;
         }
     }
 
